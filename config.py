@@ -35,8 +35,11 @@ LANG_CODES = {
 # RTL (Right-to-Left) languages
 RTL_LANGUAGES = {"Arabic", "Hebrew", "Persian", "Urdu"}
 
-# OpenAI Model Selection
-LLM_MODEL = "gpt-4o-mini"
+# LLM Provider Selection
+LLM_PROVIDER = "gemini" # Options: "openai" or "gemini"
 
-# Use OpenAI API (requires API key)
+# Model Selection
+OPENAI_MODEL = "gpt-4o-mini"
+GEMINI_MODEL = "gemini-2.5-flash"
+
 # API availability will be determined dynamically via st.session_state / st.secrets in the app

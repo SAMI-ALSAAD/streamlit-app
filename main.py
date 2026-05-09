@@ -5,7 +5,7 @@ import base64
 import os
 import re
 
-from config import LANG_CODES, DOCX_SUPPORT
+from config import LANG_CODES, DOCX_SUPPORT, LLM_PROVIDER
 from text_utils import clean_extracted_text
 from document_extraction import extract_text
 from llm_utils import get_api_key
@@ -127,9 +127,10 @@ if uploaded_file:
         extracted_text = clean_extracted_text(extracted_text)
         
         if bool(get_api_key()):
-            st.success(f"✨ AI Strategic Analysis Active (ChatGPT)")
+            provider_name = "Gemini" if LLM_PROVIDER == "gemini" else "ChatGPT"
+            st.success(f"✨ AI Strategic Analysis Active ({provider_name})")
         else:
-            st.info("📊 Basic Analysis Mode (AI fallback active. Add OPENAI_API_KEY to secrets for better results)")
+            st.info("📊 Basic Analysis Mode (AI fallback active. Add API KEY to secrets for better results)")
             
         st.markdown("---")
         

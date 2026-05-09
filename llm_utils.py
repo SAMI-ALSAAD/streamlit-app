@@ -1,45 +1,66 @@
 import requests
 import streamlit as st
-from config import LLM_MODEL
+from config import LLM_PROVIDER, OPENAI_MODEL, GEMINI_MODEL
 
 def get_api_key():
     """Safely get API key without crashing if secrets.toml is missing."""
     try:
-        return st.secrets.get("OPENAI_API_KEY", "").strip()
+        if LLM_PROVIDER == "gemini":
+            return st.secrets.get("GEMINI_API_KEY", "").strip()
+        else:
+            return st.secrets.get("OPENAI_API_KEY", "").strip()
     except Exception:
         return ""
 
 def query_llm(prompt, max_tokens=2048):
-    """Query OpenAI API with provided API key."""
+    """Query OpenAI or Gemini API with provided API key."""
     api_key = get_api_key()
     if not api_key:
         return None
     
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    
     try:
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers=headers,
-            json={
-                "model": LLM_MODEL,
-                "messages": [
-                    {"role": "system", "content": "You are a helpful and professional AI assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                "max_tokens": max_tokens,
-                "temperature": 0.3
-            },
-            timeout=120
-        )
-        if response.status_code == 200:
-            result = response.json()
-            if "choices" in result and len(result["choices"]) > 0:
-                return result["choices"][0]["message"]["content"]
-        return None
+        if LLM_PROVIDER == "gemini":
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={api_key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "maxOutputTokens": max_tokens,
+                    "temperature": 0.3
+                }
+            }
+            
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+            if response.status_code == 200:
+                result = response.json()
+                if "candidates" in result and len(result["candidates"]) > 0:
+                    return result["candidates"][0]["content"]["parts"][0]["text"]
+            return None
+        else:
+            # Default to OpenAI
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json={
+                    "model": OPENAI_MODEL,
+                    "messages": [
+                        {"role": "system", "content": "You are a helpful and professional AI assistant."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": max_tokens,
+                    "temperature": 0.3
+                },
+                timeout=120
+            )
+            if response.status_code == 200:
+                result = response.json()
+                if "choices" in result and len(result["choices"]) > 0:
+                    return result["choices"][0]["message"]["content"]
+            return None
     except Exception:
         return None
 
