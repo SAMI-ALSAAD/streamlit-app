@@ -22,24 +22,18 @@ def query_llm(prompt, max_tokens=2048):
     
     try:
         if LLM_PROVIDER == "g4f":
-            import g4f
-            import asyncio
-            # Create a new event loop if needed for g4f inside streamlit
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
-            response = g4f.ChatCompletion.create(
-                model=g4f.models.default,
+            from g4f.client import Client
+            
+            client = Client()
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a helpful and professional AI assistant."},
                     {"role": "user", "content": prompt}
                 ]
             )
-            if response and isinstance(response, str):
-                return response
+            if response and response.choices:
+                return response.choices[0].message.content
             return None
             
         elif LLM_PROVIDER == "gemini":
@@ -54,7 +48,7 @@ def query_llm(prompt, max_tokens=2048):
             }
             
             for attempt in range(3):
-                response = requests.post(url, headers=headers, json=payload, timeout=120)
+                response = requests.post(url, headers=headers, json=payload, timeout=5)
                 if response.status_code == 200:
                     result = response.json()
                     if "candidates" in result and len(result["candidates"]) > 0:
@@ -62,20 +56,20 @@ def query_llm(prompt, max_tokens=2048):
                     return None
                 elif response.status_code == 429:
                     import re, time
-                    wait_time = 20
+                    wait_time = 5
                     match = re.search(r'retry in ([\d\.]+)s', response.text)
                     if match:
-                        wait_time = float(match.group(1)) + 1
+                        wait_time = min(5, float(match.group(1)) + 1)
                     
                     if attempt < 2:
                         with st.spinner(f"API rate limit reached. Waiting {int(wait_time)}s..."):
                             time.sleep(wait_time)
                         continue
                     else:
-                        st.toast(f"Gemini API Error (429): Rate limit exceeded after retries.", icon="⚠️")
+                        print(f"Gemini API Error (429): Rate limit exceeded after retries.")
                         return None
                 else:
-                    st.toast(f"Gemini API Error ({response.status_code}): {response.text[:100]}...", icon="⚠️")
+                    print(f"Gemini API Error ({response.status_code}): {response.text[:100]}...")
                     return None
             return None
         else:
@@ -96,17 +90,17 @@ def query_llm(prompt, max_tokens=2048):
                     "max_tokens": max_tokens,
                     "temperature": 0.3
                 },
-                timeout=120
+                timeout=5
             )
             if response.status_code == 200:
                 result = response.json()
                 if "choices" in result and len(result["choices"]) > 0:
                     return result["choices"][0]["message"]["content"]
             else:
-                st.toast(f"OpenAI API Error ({response.status_code}): {response.text[:100]}...", icon="⚠️")
+                print(f"OpenAI API Error ({response.status_code}): {response.text[:100]}...")
             return None
     except Exception as e:
-        st.toast(f"LLM Connection Error: {str(e)[:100]}", icon="⚠️")
+        print(f"LLM Connection Error: {str(e)[:100]}")
         return None
 
 def llm_cleanup_output(text, context_hint=""):
