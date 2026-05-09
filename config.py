@@ -35,11 +35,8 @@ LANG_CODES = {
 # RTL (Right-to-Left) languages
 RTL_LANGUAGES = {"Arabic", "Hebrew", "Persian", "Urdu"}
 
-# Free Cloud LLM Support (HuggingFace free tier - no API key needed)
-LLM_AVAILABLE = False
+# OpenAI Model Selection
+LLM_MODEL = "gpt-4o-mini"
 
-# Qwen2.5-1.5B-Instruct - Highly capable small model, more likely to be available on free tier without token
-LLM_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
-
-# Use HuggingFace Inference API (requires API key now)
-# LLM_AVAILABLE will be determined dynamically via st.session_state in the app
+# Use OpenAI API (requires API key)
+# API availability will be determined dynamically via st.session_state / st.secrets in the app

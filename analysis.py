@@ -2,7 +2,7 @@ import re
 import pandas as pd
 from datetime import datetime, timedelta
 from text_utils import detect_document_language, clean_extracted_text
-from llm_utils import query_llm, llm_cleanup_output
+from llm_utils import query_llm, llm_cleanup_output, get_api_key
 import streamlit as st
 
 def generate_summary(text):
@@ -22,7 +22,7 @@ Use proper Arabic grammar, spelling, and punctuation. Do NOT transliterate or mi
         lang_instruction = "Respond in the same language as the document content."
     
     # Try LLM first for better summary
-    if bool(st.secrets.get('HF_API_KEY')) and len(work_text) > 50:
+    if bool(get_api_key()) and len(work_text) > 50:
         prompt = f"""{lang_instruction}
 
 Analyze this document in detail and create a comprehensive executive summary with explanations.
@@ -181,7 +181,7 @@ def extract_keywords(text):
     """Extract important keywords/phrases using LLM if available"""
     doc_lang = detect_document_language(text)
     # Try LLM first
-    if bool(st.secrets.get('HF_API_KEY')):
+    if bool(get_api_key()):
         if doc_lang == 'arabic':
             lang_note = "The document is in Arabic. Return the keywords in Arabic."
         else:
@@ -221,7 +221,7 @@ def calculate_risk_score(text):
     """Calculate risk score based on document content using LLM if available"""
     doc_lang = detect_document_language(text)
     # Try LLM first for better analysis
-    if bool(st.secrets.get('HF_API_KEY')):
+    if bool(get_api_key()):
         lang_note = "The document may be in Arabic or English. Analyze the content regardless of language." if doc_lang == 'arabic' else ""
         prompt = f"""Analyze this document for project risks. {lang_note}
 Rate the overall risk level as LOW, MEDIUM, or HIGH, and provide a score from 1-10 (10 being lowest risk). Format: "LEVEL: X/10"
@@ -310,7 +310,7 @@ def generate_timeline(text):
     
     # Try LLM first for intelligent phase extraction
     doc_lang = detect_document_language(text)
-    if bool(st.secrets.get('HF_API_KEY')):
+    if bool(get_api_key()):
         lang_note = "The document may be in Arabic. Extract phase names in English for the timeline chart." if doc_lang == 'arabic' else ""
         prompt = f"""Analyze this project document and extract the project phases/stages with estimated durations. {lang_note}
 Format each phase as: "Phase Name | Duration in days"
@@ -484,7 +484,7 @@ def analyze_go_nogo(text):
     
     # Try LLM for comprehensive AI-driven analysis
     doc_lang = detect_document_language(text)
-    if bool(st.secrets.get('HF_API_KEY')):
+    if bool(get_api_key()):
         lang_note = "The document may be in Arabic. Analyze its content regardless of language. Respond with scores in the exact format below (in English)." if doc_lang == 'arabic' else ""
         # First prompt: Get detailed scores with reasoning
         score_prompt = f"""Analyze this project document for a Go/No-Go decision. {lang_note}

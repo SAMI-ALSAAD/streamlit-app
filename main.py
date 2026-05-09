@@ -8,6 +8,7 @@ import re
 from config import LANG_CODES, DOCX_SUPPORT
 from text_utils import clean_extracted_text
 from document_extraction import extract_text
+from llm_utils import get_api_key
 from analysis import (
     generate_summary, 
     extract_dates, 
@@ -125,10 +126,10 @@ if uploaded_file:
         # Text is already cleaned by extract functions, but ensure it's clean
         extracted_text = clean_extracted_text(extracted_text)
         
-        if bool(st.secrets.get("HF_API_KEY")):
-            st.success("✨ AI Strategic Analysis Active (Qwen-2.5)")
+        if bool(get_api_key()):
+            st.success(f"✨ AI Strategic Analysis Active (ChatGPT)")
         else:
-            st.info("📊 Basic Analysis Mode (AI fallback active. Add HF_API_KEY to secrets for better results)")
+            st.info("📊 Basic Analysis Mode (AI fallback active. Add OPENAI_API_KEY to secrets for better results)")
             
         st.markdown("---")
         

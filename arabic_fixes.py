@@ -1,7 +1,7 @@
 import re
 import unicodedata
 import streamlit as st
-from llm_utils import query_llm
+from llm_utils import query_llm, get_api_key
 from text_utils import detect_document_language
 
 def fix_arabic_pdf_text(text):
@@ -122,7 +122,7 @@ def fix_lam_alef_in_text(text):
 
 def llm_correct_arabic_text(text):
     """Use LLM to fix remaining Arabic PDF extraction artifacts."""
-    api_key = st.secrets.get("HF_API_KEY", "").strip()
+    api_key = get_api_key()
     if not api_key:
         return text
     

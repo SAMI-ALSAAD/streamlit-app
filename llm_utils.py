@@ -2,66 +2,43 @@ import requests
 import streamlit as st
 from config import LLM_MODEL
 
+def get_api_key():
+    """Safely get API key without crashing if secrets.toml is missing."""
+    try:
+        return st.secrets.get("OPENAI_API_KEY", "").strip()
+    except Exception:
+        return ""
+
 def query_llm(prompt, max_tokens=2048):
-    """Query HuggingFace inference API with provided API key."""
-    api_key = st.secrets.get("HF_API_KEY", "").strip()
+    """Query OpenAI API with provided API key."""
+    api_key = get_api_key()
     if not api_key:
         return None
     
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
     
     try:
-        # Format prompt with ChatML for Qwen models
-        if "Qwen" in LLM_MODEL:
-            formatted_prompt = f"<|im_start|>system\nYou are a helpful AI assistant.<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
-        else:
-            formatted_prompt = prompt
-        
-        # Use HuggingFace inference API
         response = requests.post(
-            f"https://api-inference.huggingface.co/models/{LLM_MODEL}",
+            "https://api.openai.com/v1/chat/completions",
             headers=headers,
             json={
-                "inputs": formatted_prompt, 
-                "parameters": {
-                    "max_new_tokens": max_tokens,
-                    "temperature": 0.3,
-                    "do_sample": True,
-                    "return_full_text": False
-                },
-                "options": {"wait_for_model": True}
+                "model": LLM_MODEL,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful and professional AI assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": max_tokens,
+                "temperature": 0.3
             },
-            timeout=180
+            timeout=120
         )
         if response.status_code == 200:
             result = response.json()
-            if isinstance(result, list) and len(result) > 0:
-                return result[0].get('generated_text', '')
-            elif isinstance(result, dict) and 'generated_text' in result:
-                return result['generated_text']
-            return str(result)
-        elif response.status_code == 503:
-            # Model is loading, wait and retry once
-            import time
-            time.sleep(30)
-            response = requests.post(
-                f"https://api-inference.huggingface.co/models/{LLM_MODEL}",
-                headers=headers,
-                json={
-                    "inputs": formatted_prompt, 
-                    "parameters": {
-                        "max_new_tokens": max_tokens,
-                        "temperature": 0.3,
-                        "do_sample": True,
-                        "return_full_text": False
-                    }
-                },
-                timeout=120
-            )
-            if response.status_code == 200:
-                result = response.json()
-                if isinstance(result, list) and len(result) > 0:
-                    return result[0].get('generated_text', '')
+            if "choices" in result and len(result["choices"]) > 0:
+                return result["choices"][0]["message"]["content"]
         return None
     except Exception:
         return None
@@ -79,7 +56,7 @@ def llm_cleanup_output(text, context_hint=""):
                       (e.g. "executive summary", "keyword list") so the LLM
                       knows how to treat it.
     """
-    api_key = st.secrets.get("HF_API_KEY", "").strip()
+    api_key = get_api_key()
     if not api_key or not text or not text.strip():
         return text
 
