@@ -36,7 +36,7 @@ LANG_CODES = {
 RTL_LANGUAGES = {"Arabic", "Hebrew", "Persian", "Urdu"}
 
 # LLM Provider Selection
-LLM_PROVIDER = "gemini" # Options: "openai" or "gemini"
+LLM_PROVIDER = "g4f" # Options: "openai", "gemini", or "g4f" (free LLMs)
 
 # Model Selection
 OPENAI_MODEL = "gpt-4o-mini"

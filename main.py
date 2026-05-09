@@ -127,7 +127,12 @@ if uploaded_file:
         extracted_text = clean_extracted_text(extracted_text)
         
         if bool(get_api_key()):
-            provider_name = "Gemini" if LLM_PROVIDER == "gemini" else "ChatGPT"
+            if LLM_PROVIDER == "g4f":
+                provider_name = "Free LLMs (G4F)"
+            elif LLM_PROVIDER == "gemini":
+                provider_name = "Gemini"
+            else:
+                provider_name = "ChatGPT"
             st.success(f"✨ AI Strategic Analysis Active ({provider_name})")
         else:
             st.info("📊 Basic Analysis Mode (AI fallback active. Add API KEY to secrets for better results)")

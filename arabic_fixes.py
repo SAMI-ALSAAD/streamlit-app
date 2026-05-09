@@ -130,7 +130,7 @@ def llm_correct_arabic_text(text):
     if doc_lang != 'arabic':
         return text
     
-    max_chunk_chars = 2500
+    max_chunk_chars = 20000
     lines = text.split('\n')
     chunks = []
     current_chunk_lines = []
@@ -165,7 +165,7 @@ def llm_correct_arabic_text(text):
 
 النص المصحح:"""
         
-        result = query_llm(prompt, max_tokens=2048)
+        result = query_llm(prompt, max_tokens=8192)
         if result and len(result.strip()) > len(chunk) * 0.3:
             corrected_chunks.append(result.strip())
         else:

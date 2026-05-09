@@ -6,3 +6,4 @@ pdfplumber
 python-docx
 deep-translator
 requests
+g4f
