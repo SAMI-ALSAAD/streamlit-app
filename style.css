@@ -477,6 +477,22 @@ hr {
     border: 1px solid #e2e8f0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* RTL Summary Box (Arabic / Hebrew / Persian) */
+.summary-box-rtl {
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: embed;
+    font-family: 'Segoe UI', 'Tahoma', 'Arial', 'Noto Sans Arabic', 'Noto Naskh Arabic', sans-serif;
+}
+
+.summary-box-rtl p {
+    unicode-bidi: plaintext;
+    text-align: start;
 }
 
 /* Key Topics Table */
