@@ -41,14 +41,5 @@ LLM_AVAILABLE = False
 # Qwen2.5-1.5B-Instruct - Highly capable small model, more likely to be available on free tier without token
 LLM_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
 
-# Use HuggingFace Inference API (free tier, no key required)
-try:
-    test_response = requests.post(
-        f"https://api-inference.huggingface.co/models/{LLM_MODEL}",
-        json={"inputs": "test", "options": {"wait_for_model": True}},
-        timeout=30
-    )
-    if test_response.status_code in [200, 503]:  # 503 means model loading
-        LLM_AVAILABLE = True
-except Exception:
-    pass
+# Use HuggingFace Inference API (requires API key now)
+# LLM_AVAILABLE will be determined dynamically via st.session_state in the app

@@ -1,9 +1,9 @@
 import re
 import pandas as pd
 from datetime import datetime, timedelta
-from config import LLM_AVAILABLE
 from text_utils import detect_document_language, clean_extracted_text
 from llm_utils import query_llm, llm_cleanup_output
+import streamlit as st
 
 def generate_summary(text):
     """Generate a comprehensive, detailed summary with explanations from extracted text"""
@@ -22,7 +22,7 @@ Use proper Arabic grammar, spelling, and punctuation. Do NOT transliterate or mi
         lang_instruction = "Respond in the same language as the document content."
     
     # Try LLM first for better summary
-    if LLM_AVAILABLE and len(work_text) > 50:
+    if bool(st.secrets.get('HF_API_KEY')) and len(work_text) > 50:
         prompt = f"""{lang_instruction}
 
 Analyze this document in detail and create a comprehensive executive summary with explanations.
@@ -45,7 +45,7 @@ Document Content:
 {work_text[:6000]}
 
 Comprehensive Summary:"""
-        llm_summary = query_llm(prompt, max_tokens=30000)
+        llm_summary = query_llm(prompt, max_tokens=2048)
         if llm_summary and len(llm_summary) > 50:
             llm_summary = llm_cleanup_output(llm_summary.strip(), "executive summary of a document")
             return llm_summary
@@ -181,7 +181,7 @@ def extract_keywords(text):
     """Extract important keywords/phrases using LLM if available"""
     doc_lang = detect_document_language(text)
     # Try LLM first
-    if LLM_AVAILABLE:
+    if bool(st.secrets.get('HF_API_KEY')):
         if doc_lang == 'arabic':
             lang_note = "The document is in Arabic. Return the keywords in Arabic."
         else:
@@ -192,7 +192,7 @@ Return them as a comma-separated list:
 {text[:2000]}
 
 Keywords:"""
-        llm_keywords = query_llm(prompt, max_tokens=30000)
+        llm_keywords = query_llm(prompt, max_tokens=2048)
         if llm_keywords:
             # Clean up the raw keyword list before parsing
             llm_keywords = llm_cleanup_output(llm_keywords.strip(), "comma-separated keyword list")
@@ -221,7 +221,7 @@ def calculate_risk_score(text):
     """Calculate risk score based on document content using LLM if available"""
     doc_lang = detect_document_language(text)
     # Try LLM first for better analysis
-    if LLM_AVAILABLE:
+    if bool(st.secrets.get('HF_API_KEY')):
         lang_note = "The document may be in Arabic or English. Analyze the content regardless of language." if doc_lang == 'arabic' else ""
         prompt = f"""Analyze this document for project risks. {lang_note}
 Rate the overall risk level as LOW, MEDIUM, or HIGH, and provide a score from 1-10 (10 being lowest risk). Format: "LEVEL: X/10"
@@ -229,7 +229,7 @@ Rate the overall risk level as LOW, MEDIUM, or HIGH, and provide a score from 1-
 {text[:2000]}
 
 Risk Assessment:"""
-        llm_response = query_llm(prompt, max_tokens=30000)
+        llm_response = query_llm(prompt, max_tokens=2048)
         if llm_response:
             llm_response = llm_cleanup_output(llm_response.strip(), "risk assessment result with a level label and numeric score")
             # Parse response
@@ -310,7 +310,7 @@ def generate_timeline(text):
     
     # Try LLM first for intelligent phase extraction
     doc_lang = detect_document_language(text)
-    if LLM_AVAILABLE:
+    if bool(st.secrets.get('HF_API_KEY')):
         lang_note = "The document may be in Arabic. Extract phase names in English for the timeline chart." if doc_lang == 'arabic' else ""
         prompt = f"""Analyze this project document and extract the project phases/stages with estimated durations. {lang_note}
 Format each phase as: "Phase Name | Duration in days"
@@ -321,7 +321,7 @@ Document:
 
 Project Phases:"""
         
-        llm_response = query_llm(prompt, max_tokens=30000)
+        llm_response = query_llm(prompt, max_tokens=2048)
         if llm_response:
             llm_response = llm_cleanup_output(llm_response.strip(), "project timeline phase list in 'Phase Name | Duration in days' format")
         if llm_response:
@@ -484,7 +484,7 @@ def analyze_go_nogo(text):
     
     # Try LLM for comprehensive AI-driven analysis
     doc_lang = detect_document_language(text)
-    if LLM_AVAILABLE:
+    if bool(st.secrets.get('HF_API_KEY')):
         lang_note = "The document may be in Arabic. Analyze its content regardless of language. Respond with scores in the exact format below (in English)." if doc_lang == 'arabic' else ""
         # First prompt: Get detailed scores with reasoning
         score_prompt = f"""Analyze this project document for a Go/No-Go decision. {lang_note}
@@ -507,7 +507,7 @@ Document:
 
 Analysis:"""
         
-        llm_response = query_llm(score_prompt, max_tokens=30000)
+        llm_response = query_llm(score_prompt, max_tokens=2048)
         if llm_response:
             llm_response = llm_cleanup_output(llm_response.strip(), "Go/No-Go decision analysis with criterion scores and a verdict")
         if llm_response:

@@ -1,18 +1,26 @@
 import requests
-from config import LLM_AVAILABLE, LLM_MODEL
+import streamlit as st
+from config import LLM_MODEL
 
 def query_llm(prompt, max_tokens=2048):
-    """Query HuggingFace free tier LLM (no API key needed) - Mistral-7B for better summaries"""
-    if not LLM_AVAILABLE:
+    """Query HuggingFace inference API with provided API key."""
+    api_key = st.secrets.get("HF_API_KEY", "").strip()
+    if not api_key:
         return None
     
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
     try:
-        # Format prompt (plain text for general models)
-        formatted_prompt = prompt
+        # Format prompt with ChatML for Qwen models
+        if "Qwen" in LLM_MODEL:
+            formatted_prompt = f"<|im_start|>system\nYou are a helpful AI assistant.<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
+        else:
+            formatted_prompt = prompt
         
-        # Use free HuggingFace inference API with Mistral-7B-Instruct
+        # Use HuggingFace inference API
         response = requests.post(
             f"https://api-inference.huggingface.co/models/{LLM_MODEL}",
+            headers=headers,
             json={
                 "inputs": formatted_prompt, 
                 "parameters": {
@@ -38,6 +46,7 @@ def query_llm(prompt, max_tokens=2048):
             time.sleep(30)
             response = requests.post(
                 f"https://api-inference.huggingface.co/models/{LLM_MODEL}",
+                headers=headers,
                 json={
                     "inputs": formatted_prompt, 
                     "parameters": {
@@ -70,7 +79,8 @@ def llm_cleanup_output(text, context_hint=""):
                       (e.g. "executive summary", "keyword list") so the LLM
                       knows how to treat it.
     """
-    if not LLM_AVAILABLE or not text or not text.strip():
+    api_key = st.secrets.get("HF_API_KEY", "").strip()
+    if not api_key or not text or not text.strip():
         return text
 
     hint_line = f"The text below is a {context_hint}. " if context_hint else ""
@@ -101,7 +111,7 @@ Text to fix:
 
 Corrected text:"""
 
-    cleaned = query_llm(prompt, max_tokens=30000)
+    cleaned = query_llm(prompt, max_tokens=2048)
     # Accept the cleaned version only if it is substantive
     if cleaned and len(cleaned.strip()) > len(text) * 0.3:
         return cleaned.strip()

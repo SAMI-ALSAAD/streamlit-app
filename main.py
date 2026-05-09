@@ -5,7 +5,7 @@ import base64
 import os
 import re
 
-from config import LANG_CODES, LLM_AVAILABLE, DOCX_SUPPORT
+from config import LANG_CODES, DOCX_SUPPORT
 from text_utils import clean_extracted_text
 from document_extraction import extract_text
 from analysis import (
@@ -60,6 +60,7 @@ def load_pattern_borders():
 
 load_css()
 load_pattern_borders()
+
 
 # --- 3. MAIN INTERFACE ---
 
@@ -124,10 +125,10 @@ if uploaded_file:
         # Text is already cleaned by extract functions, but ensure it's clean
         extracted_text = clean_extracted_text(extracted_text)
         
-        if LLM_AVAILABLE:
+        if bool(st.secrets.get("HF_API_KEY")):
             st.success("✨ AI Strategic Analysis Active (Qwen-2.5)")
         else:
-            st.info("📊 Basic Analysis Mode (AI fallback active)")
+            st.info("📊 Basic Analysis Mode (AI fallback active. Add HF_API_KEY to secrets for better results)")
             
         st.markdown("---")
         
